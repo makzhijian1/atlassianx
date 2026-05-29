@@ -1,0 +1,20 @@
+meta {
+  name: Get Cloud ID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{JIRA_SITE_URL}}/_edge/tenant_info
+  body: none
+  auth: basic
+}
+
+headers {
+  Accept: application/json
+}
+
+auth:basic {
+  username: {{JIRA_EMAIL}}
+  password: {{JIRA_API_TOKEN}}
+}

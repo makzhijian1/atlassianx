@@ -1,9 +1,0 @@
-@jiraSiteUrl = https://your-domain.atlassian.net
-@jiraEmail = user@example.com
-@jiraApiToken = replace_me
-@issueKey = EXAMPLE-1
-
-### REST: Get a specific issue
-GET {{jiraSiteUrl}}/rest/api/3/issue/{{issueKey}}?fields=summary,status,issuetype,project,parent,description
-Authorization: Basic {{jiraEmail}} {{jiraApiToken}}
-Accept: application/json

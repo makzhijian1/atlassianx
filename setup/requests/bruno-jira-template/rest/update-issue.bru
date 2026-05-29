@@ -1,0 +1,146 @@
+meta {
+  name: Update Issue
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{JIRA_SITE_URL}}/rest/api/3/issue/{{ISSUE_KEY}}
+  body: json
+  auth: basic
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+auth:basic {
+  username: {{JIRA_EMAIL}}
+  password: {{JIRA_API_TOKEN}}
+}
+
+body:json {
+  {
+    "fields": {
+      "summary": "Order processing system should validate payment before fulfillment",
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Background"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Order fulfillment needs a refreshed payment validation rule before warehouse handoff."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Requirements"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Re-check payment status immediately before fulfillment starts."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Record blocked fulfillment attempts with an operator-readable reason."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Acceptance Criteria"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Paid orders continue to fulfillment without manual intervention."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Failed-payment orders remain out of fulfillment queues."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

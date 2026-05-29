@@ -1,0 +1,31 @@
+meta {
+  name: Get Issue
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{GRAPHQL_URL}}
+  body: json
+  auth: basic
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+auth:basic {
+  username: {{JIRA_EMAIL}}
+  password: {{JIRA_API_TOKEN}}
+}
+
+body:json {
+  {
+    "query": "query JiraIssue($cloudId: ID!, $issueKey: String!) { jira { issueByKey(cloudId: $cloudId, issueKey: $issueKey) { key summary issueType { name } status { name } } } }",
+    "variables": {
+      "cloudId": "{{JIRA_CLOUD_ID}}",
+      "issueKey": "{{ISSUE_KEY}}"
+    }
+  }
+}

@@ -1,8 +1,5 @@
 .env
 .jira-env
-.envs/jira/*.env
-!.envs/jira/example.env
-requests/*
-!requests/templates/
-!requests/templates/*.http
+.envs/
+projects/
 .DS_Store

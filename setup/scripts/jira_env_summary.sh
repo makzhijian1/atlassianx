@@ -6,7 +6,7 @@ heading="${2:-}"
 footer="${3:-}"
 
 if [ -z "$env_file" ]; then
-  echo "Usage: scripts/jira_env_summary.sh <env-file> [heading] [footer]" >&2
+  echo "Usage: setup/scripts/jira_env_summary.sh <env-file> [heading] [footer]" >&2
   exit 2
 fi
 
@@ -55,7 +55,7 @@ echo "JIRA_EMAIL=$jira_email"
 if [ -n "$jira_cloud_id" ]; then
   echo "JIRA_CLOUD_ID=$jira_cloud_id"
 else
-  echo "JIRA_CLOUD_ID=<missing: rerun make init-jira-account for this env>"
+  echo "JIRA_CLOUD_ID=<missing: rerun make init-jira-account PROJECT=<project>>"
 fi
 
 if [ -n "$footer" ]; then

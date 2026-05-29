@@ -1,0 +1,20 @@
+meta {
+  name: Get Issue
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{JIRA_SITE_URL}}/rest/api/3/issue/{{ISSUE_KEY}}?fields=summary,status,issuetype,project,parent,description
+  body: none
+  auth: basic
+}
+
+headers {
+  Accept: application/json
+}
+
+auth:basic {
+  username: {{JIRA_EMAIL}}
+  password: {{JIRA_API_TOKEN}}
+}

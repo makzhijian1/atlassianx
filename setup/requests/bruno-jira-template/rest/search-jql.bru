@@ -1,0 +1,36 @@
+meta {
+  name: Search JQL
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{JIRA_SITE_URL}}/rest/api/3/search/jql
+  body: json
+  auth: basic
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+auth:basic {
+  username: {{JIRA_EMAIL}}
+  password: {{JIRA_API_TOKEN}}
+}
+
+body:json {
+  {
+    "jql": "{{JQL}}",
+    "fields": [
+      "summary",
+      "status",
+      "issuetype",
+      "project",
+      "parent",
+      "updated"
+    ],
+    "maxResults": 50
+  }
+}

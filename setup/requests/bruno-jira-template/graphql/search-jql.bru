@@ -1,0 +1,31 @@
+meta {
+  name: Search JQL
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{GRAPHQL_URL}}
+  body: json
+  auth: basic
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+auth:basic {
+  username: {{JIRA_EMAIL}}
+  password: {{JIRA_API_TOKEN}}
+}
+
+body:json {
+  {
+    "query": "query JiraIssueSearch($cloudId: ID!, $jql: String!) { jira { issueSearch(cloudId: $cloudId, jql: $jql, first: 50) { nodes { key summary issueType { name } status { name } updated } } } }",
+    "variables": {
+      "cloudId": "{{JIRA_CLOUD_ID}}",
+      "jql": "{{JQL}}"
+    }
+  }
+}

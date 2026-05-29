@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-JIRA_ENV_DIR=".envs/jira"
-JIRA_ACTIVE_FILE=".jira-env"
+PROJECT="${1:-}"
 TOKEN_PAGE="https://id.atlassian.com/manage-profile/security/api-tokens"
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$script_dir/../.." && pwd)"
 
 prompt_required() {
   local label="$1"
@@ -17,22 +19,6 @@ prompt_required() {
   printf "%s" "$value"
 }
 
-validate_env_name() {
-  local name="$1"
-
-  case "$name" in
-    ""|*".."*|*/*|*\\*)
-      return 1
-      ;;
-  esac
-
-  case "$name" in
-    *[!A-Za-z0-9._-]*)
-      return 1
-      ;;
-  esac
-}
-
 set_env_value() {
   local key="$1"
   local value="$2"
@@ -40,10 +26,12 @@ set_env_value() {
 
   tmp_file="$(mktemp)"
 
-  if grep -q "^${key}=" "$ENV_FILE"; then
+  if [ -f "$ENV_FILE" ] && grep -q "^${key}=" "$ENV_FILE"; then
     awk -v key="$key" -v value="$value" 'BEGIN { replacement = key "=" value } $0 ~ "^" key "=" { print replacement; next } { print }' "$ENV_FILE" > "$tmp_file"
   else
-    cp "$ENV_FILE" "$tmp_file"
+    if [ -f "$ENV_FILE" ]; then
+      cp "$ENV_FILE" "$tmp_file"
+    fi
     printf "%s=%s\n" "$key" "$value" >> "$tmp_file"
   fi
 
@@ -155,20 +143,17 @@ fetch_cloud_id() {
   printf "%s" "$cloud_id"
 }
 
-env_name="$(prompt_required "Jira env name, e.g. maklabs")"
-if ! validate_env_name "$env_name"; then
-  echo "Invalid Jira env name: $env_name" >&2
-  echo "Use only letters, numbers, dots, underscores, and hyphens." >&2
+if [ -z "$PROJECT" ]; then
+  echo "PROJECT is required." >&2
+  echo >&2
+  echo "Example:" >&2
+  echo "make init-jira-account PROJECT=maklabs" >&2
   exit 1
 fi
 
-mkdir -p "$JIRA_ENV_DIR"
-ENV_FILE="$JIRA_ENV_DIR/$env_name.env"
+"$script_dir/init_project.sh" "$PROJECT"
 
-if [ ! -f "$ENV_FILE" ]; then
-  : > "$ENV_FILE"
-  echo "Created $ENV_FILE."
-fi
+ENV_FILE="$repo_root/projects/$PROJECT/.env"
 
 project_url="$(prompt_required "Jira project URL, e.g. https://maklabs.atlassian.net/jira/software/projects/MZJ2026")"
 site_url="$(derive_site_url "$project_url")"
@@ -222,18 +207,19 @@ set_env_value "JIRA_PROJECT_KEY" "$project_key"
 set_env_value "JIRA_EMAIL" "$email"
 set_env_value "JIRA_API_TOKEN" "$token"
 
-printf "%s\n" "$env_name" > "$JIRA_ACTIVE_FILE"
+"$script_dir/sync_bruno_env.sh" "$PROJECT"
 
-echo "Saved Jira API access settings to $ENV_FILE."
-echo "Selected Jira env: $env_name"
+echo "Saved Jira API access settings to projects/$PROJECT/.env."
 echo "Testing Jira connectivity for $project_key on $site_url..."
-REQUIRE_CLOUD_ID=0 ENV_FILE="$ENV_FILE" ./scripts/test_jira_account.sh
+REQUIRE_CLOUD_ID=0 ENV_FILE="$ENV_FILE" "$script_dir/test_jira_account.sh"
 
 echo "Retrieving Jira Cloud ID for $site_url..."
 cloud_id="$(fetch_cloud_id "$site_url" "$email" "$token")"
 set_env_value "JIRA_CLOUD_ID" "$cloud_id"
+"$script_dir/sync_bruno_env.sh" "$PROJECT"
 
-echo "Saved Jira Cloud ID to $ENV_FILE."
-echo "Verifying refreshed Jira profile..."
-ENV_FILE="$ENV_FILE" ./scripts/test_jira_account.sh
-./scripts/jira_env_summary.sh "$ENV_FILE" "Selected Jira env: $env_name"
+echo "Saved Jira Cloud ID to projects/$PROJECT/.env."
+echo "Updated Bruno environment at projects/$PROJECT/requests/jira/environments/$PROJECT.bru."
+echo "Verifying refreshed Jira project configuration..."
+ENV_FILE="$ENV_FILE" "$script_dir/test_jira_account.sh"
+"$script_dir/jira_env_summary.sh" "$ENV_FILE" "Jira project env: $PROJECT"

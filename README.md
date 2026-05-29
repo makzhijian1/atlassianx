@@ -1,105 +1,80 @@
 # atlassianx
 
-## Introduction
+`atlassianx` is a local-first Atlassian setup and tooling repository.
 
-`atlassianx` is a Make-centric workspace for local Jira and Atlassian automation. It keeps Jira account/project settings in ignored local env profiles so you can switch between projects without committing credentials.
+Clone it once, use the committed tooling under `setup/`, and keep Jira credentials, drafts, request experiments, fetched issues, generated files, and future agent outputs inside ignored local project workspaces under `projects/`.
 
-## First Time Setup
-
-Initialize a Jira profile:
-
-```bash
-make init-jira-account
-```
-
-The setup prompts for:
-
-- Jira env name, for example `maklabs`
-- Jira project URL, for example `https://maklabs.atlassian.net/jira/software/projects/MZJ2026`
-- Jira registered email
-- Whether a Jira API token already exists
-- Jira API token, entered silently
-
-After validating Jira access, setup also retrieves the Jira Cloud ID and stores it in the same profile for GraphQL requests.
-
-The profile is saved to:
+## Architecture
 
 ```text
-.envs/jira/<name>.env
+atlassianx/
+├── setup/
+│   ├── docs/
+│   ├── requests/
+│   ├── scripts/
+│   └── templates/
+└── projects/
+    └── <project-name>/
 ```
 
-The selected profile name is saved to ignored local file `.jira-env`. There should be no root `.env` required for normal use.
+`setup/` is repository-owned. `projects/` is local user state and is ignored by git.
 
-Verify the active Jira profile:
+Each project workspace uses a single `.env` file for Jira settings and a local Bruno collection for Jira API requests:
+
+```text
+projects/
+└── maklabs/
+    ├── .env
+    ├── issues/
+    │   ├── local/
+    │   └── remote/
+    └── requests/
+        └── jira/
+```
+
+## Quick Start
+
+Create a local project workspace:
 
 ```bash
-make show-jira-env
+make init-project PROJECT=maklabs
+```
+
+Initialize Jira credentials for that project:
+
+```bash
+make init-jira-account PROJECT=maklabs
+```
+
+Show the non-secret Jira settings:
+
+```bash
+make show-jira-env PROJECT=maklabs
 ```
 
 Test Jira connectivity:
 
 ```bash
-make test-jira-account
+make test-jira-account PROJECT=maklabs
 ```
 
-## Toggling Envs
+Open the project Bruno collection from:
 
-List available Jira profiles:
-
-```bash
-make list-jira-envs
+```text
+projects/maklabs/requests/jira/
 ```
 
-Select an existing profile:
+## Setup Docs
 
-```bash
-make set-jira-env ENV=maklabs
-```
-
-This updates `.jira-env` only. It does not copy or overwrite the saved profile file.
-
-Create a profile manually from the example:
-
-```bash
-cp .envs/jira/example.env .envs/jira/work.env
-```
-
-Edit values:
-
-```env
-JIRA_PROJECT_URL=...
-JIRA_EMAIL=...
-JIRA_API_TOKEN=...
-JIRA_SITE_URL=...
-JIRA_PROJECT_KEY=...
-JIRA_CLOUD_ID=...
-```
-
-Security notes:
-
-- `.jira-env` is local-only and ignored by git.
-- `.envs/jira/*.env` is ignored by git.
-- Never commit API tokens.
-- `example.env` is safe to commit.
-
-## Request Templates
-
-This repo includes VS Code REST Client `.http` templates for common Jira API calls:
-
-```bash
-make copy-request-templates DEST=requests/local
-```
-
-Edit the copied files under `requests/local` with your local Jira values, issue keys, and JQL. Custom folders under `requests/` are ignored by git; committed templates live under `requests/templates/`.
-
-The templates include REST examples for reading, searching, creating, and updating issues. Basic create/update examples use an order processing system sample with `Background`, `Requirements`, and `Acceptance Criteria` sections.
+Detailed setup and workspace notes live in [setup/docs/setup.md](setup/docs/setup.md).
 
 ## Increments
 
 Engineering work is tracked in `_increments/`.
 
 - `_increments/_templates/` contains the reusable increment document templates.
-- `_increments/ATL-001-initialise-jira-api-access/` captures the first increment for Jira API account initialization.
-- `_increments/ATL-002-jira-env-profiles/` captures Jira environment profile switching.
-- `_increments/ATL-003-jira-cloud-id-in-env-profiles/` captures Jira Cloud ID setup during env initialization.
-- `_increments/ATL-004-jira-http-request-templates/` captures the draft request template collection.
+- `_increments/ATL-001-initialise-jira-api-access/` captures the first Jira API setup increment.
+- `_increments/ATL-002-jira-env-profiles/` captures the old Jira env profile workflow.
+- `_increments/ATL-003-jira-cloud-id-in-env-profiles/` captures Jira Cloud ID setup.
+- `_increments/ATL-004-jira-http-request-templates/` captures the old REST Client template workflow.
+- `_increments/ATL-005-separate-setup-from-project-workspaces/` captures the setup/project workspace separation.

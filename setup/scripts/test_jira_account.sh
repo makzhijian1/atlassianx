@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-JIRA_ENV_DIR=".envs/jira"
-JIRA_ACTIVE_FILE=".jira-env"
 ENV_FILE="${ENV_FILE:-}"
 REQUIRE_CLOUD_ID="${REQUIRE_CLOUD_ID:-1}"
 
-if [ -z "$ENV_FILE" ] && [ -f "$JIRA_ACTIVE_FILE" ]; then
-  active_env="$(cat "$JIRA_ACTIVE_FILE")"
-  ENV_FILE="$JIRA_ENV_DIR/$active_env.env"
-fi
-
 if [ -z "$ENV_FILE" ]; then
-  ENV_FILE=".env"
+  echo "ENV_FILE is required." >&2
+  exit 2
 fi
 
 get_env_value() {
@@ -124,7 +118,7 @@ fail_auth() {
   echo "- Confirm the token was created under the same Atlassian account email saved in JIRA_EMAIL." >&2
   echo "- If you have multiple Atlassian accounts in the browser, switch to the account that owns this Jira project before creating the token." >&2
   echo "- Use an Atlassian account API token for Jira Cloud, not a token name, token ID, org admin API key, OAuth client secret, or app password." >&2
-  echo "- Re-run make init-jira-account to replace the saved Jira env profile." >&2
+  echo "- Re-run make init-jira-account PROJECT=<project> to replace the saved Jira project env." >&2
   exit 1
 }
 
@@ -142,7 +136,7 @@ fail_project() {
   echo "Likely fixes:" >&2
   echo "- Confirm ${JIRA_PROJECT_KEY} is the project key from the Jira URL." >&2
   echo "- Confirm ${JIRA_EMAIL} can view that project in the Jira web UI." >&2
-  echo "- Re-run make init-jira-account if this checkout should target a different project." >&2
+  echo "- Re-run make init-jira-account PROJECT=<project> if this checkout should target a different project." >&2
   exit 1
 }
 
@@ -159,7 +153,7 @@ require_value "JIRA_API_TOKEN" "$JIRA_API_TOKEN"
 
 if [ "$REQUIRE_CLOUD_ID" = "1" ] && [ -z "$JIRA_CLOUD_ID" ]; then
   echo "Missing JIRA_CLOUD_ID in $ENV_FILE." >&2
-  echo "Re-run make init-jira-account for this env to refresh the profile with Cloud ID." >&2
+  echo "Re-run make init-jira-account PROJECT=<project> to refresh the project env with Cloud ID." >&2
   exit 1
 fi
 

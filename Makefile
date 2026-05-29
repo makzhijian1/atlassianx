@@ -1,7 +1,8 @@
-.PHONY: init init-jira-account test-jira-account set-jira-env show-jira-env list-jira-envs require-active-jira-env
+.PHONY: init init-jira-account test-jira-account set-jira-env show-jira-env list-jira-envs require-active-jira-env copy-request-templates
 
 JIRA_ENV_DIR := .envs/jira
 JIRA_ACTIVE_FILE := .jira-env
+REQUEST_TEMPLATE_DIR := requests/templates
 ACTIVE_JIRA_ENV := $(strip $(shell test -f $(JIRA_ACTIVE_FILE) && cat $(JIRA_ACTIVE_FILE)))
 ACTIVE_JIRA_ENV_FILE := $(if $(ACTIVE_JIRA_ENV),$(JIRA_ENV_DIR)/$(ACTIVE_JIRA_ENV).env,)
 
@@ -77,3 +78,21 @@ init-jira-account:
 
 test-jira-account: require-active-jira-env
 	@ENV_FILE="$(ACTIVE_JIRA_ENV_FILE)" ./scripts/test_jira_account.sh
+
+copy-request-templates:
+	@set -e; \
+	if [ -z "$(DEST)" ]; then \
+		echo "DEST is required. Usage: make copy-request-templates DEST=requests/local" >&2; \
+		exit 1; \
+	fi; \
+	case "$(DEST)" in \
+		requests/*) ;; \
+		*) echo "DEST must be under requests/, for example requests/local." >&2; exit 1 ;; \
+	esac; \
+	if [ "$(DEST)" = "$(REQUEST_TEMPLATE_DIR)" ]; then \
+		echo "DEST must not be $(REQUEST_TEMPLATE_DIR); choose a local folder like requests/local." >&2; \
+		exit 1; \
+	fi; \
+	mkdir -p "$(DEST)"; \
+	cp "$(REQUEST_TEMPLATE_DIR)"/*.http "$(DEST)/"; \
+	echo "Copied request templates to $(DEST)."

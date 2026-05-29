@@ -1,0 +1,9 @@
+@jiraSiteUrl = https://your-domain.atlassian.net
+@jiraEmail = user@example.com
+@jiraApiToken = replace_me
+
+### GraphQL prerequisite helper: inspect tenant info Cloud ID
+# This uses the Jira site tenant info endpoint so GraphQL requests can be given the matching cloud ID.
+GET {{jiraSiteUrl}}/_edge/tenant_info
+Authorization: Basic {{jiraEmail}} {{jiraApiToken}}
+Accept: application/json

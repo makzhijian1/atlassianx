@@ -82,6 +82,18 @@ Security notes:
 - Never commit API tokens.
 - `example.env` is safe to commit.
 
+## Request Templates
+
+This repo includes VS Code REST Client `.http` templates for common Jira API calls:
+
+```bash
+make copy-request-templates DEST=requests/local
+```
+
+Edit the copied files under `requests/local` with your local Jira values, issue keys, and JQL. Custom folders under `requests/` are ignored by git; committed templates live under `requests/templates/`.
+
+The templates include REST examples for reading, searching, creating, and updating issues. Basic create/update examples use an order processing system sample with `Background`, `Requirements`, and `Acceptance Criteria` sections.
+
 ## Increments
 
 Engineering work is tracked in `_increments/`.

@@ -85,6 +85,76 @@ read_token() {
   printf "%s" "$value"
 }
 
+basic_auth_header() {
+  local email="$1"
+  local token="$2"
+  local encoded
+
+  encoded="$(printf "%s:%s" "$email" "$token" | base64 | tr -d "\n")"
+  printf "Authorization: Basic %s" "$encoded"
+}
+
+request_json() {
+  local url="$1"
+  local headers_file="$2"
+  local body_file="$3"
+  local auth_header="$4"
+
+  curl -sS \
+    -D "$headers_file" \
+    -o "$body_file" \
+    -w "%{http_code}" \
+    -H "$auth_header" \
+    -H "Accept: application/json" \
+    "$url" || true
+}
+
+extract_cloud_id() {
+  local body_file="$1"
+
+  sed -nE 's/.*"cloudId"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$body_file" | head -n 1
+}
+
+fetch_cloud_id() {
+  local site_url="$1"
+  local email="$2"
+  local token="$3"
+  local auth_header
+  local headers_file
+  local body_file
+  local status
+  local cloud_id
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "curl is required to retrieve Jira Cloud ID." >&2
+    exit 1
+  fi
+
+  auth_header="$(basic_auth_header "$email" "$token")"
+  headers_file="$(mktemp)"
+  body_file="$(mktemp)"
+  status="$(request_json "${site_url%/}/_edge/tenant_info" "$headers_file" "$body_file" "$auth_header")"
+
+  if [ "$status" != "200" ]; then
+    echo "Could not retrieve Jira Cloud ID for $site_url. HTTP $status." >&2
+    echo "Response body preview:" >&2
+    if [ -s "$body_file" ]; then
+      printf "  " >&2
+      head -c 500 "$body_file" | sed "s/[[:cntrl:]]/ /g" >&2
+      printf "\n" >&2
+    fi
+    exit 1
+  fi
+
+  cloud_id="$(extract_cloud_id "$body_file")"
+  if [ -z "$cloud_id" ]; then
+    echo "Could not parse Jira Cloud ID from ${site_url%/}/_edge/tenant_info." >&2
+    exit 1
+  fi
+
+  printf "%s" "$cloud_id"
+}
+
 env_name="$(prompt_required "Jira env name, e.g. maklabs")"
 if ! validate_env_name "$env_name"; then
   echo "Invalid Jira env name: $env_name" >&2
@@ -157,4 +227,13 @@ printf "%s\n" "$env_name" > "$JIRA_ACTIVE_FILE"
 echo "Saved Jira API access settings to $ENV_FILE."
 echo "Selected Jira env: $env_name"
 echo "Testing Jira connectivity for $project_key on $site_url..."
+REQUIRE_CLOUD_ID=0 ENV_FILE="$ENV_FILE" ./scripts/test_jira_account.sh
+
+echo "Retrieving Jira Cloud ID for $site_url..."
+cloud_id="$(fetch_cloud_id "$site_url" "$email" "$token")"
+set_env_value "JIRA_CLOUD_ID" "$cloud_id"
+
+echo "Saved Jira Cloud ID to $ENV_FILE."
+echo "Verifying refreshed Jira profile..."
 ENV_FILE="$ENV_FILE" ./scripts/test_jira_account.sh
+./scripts/jira_env_summary.sh "$ENV_FILE" "Selected Jira env: $env_name"

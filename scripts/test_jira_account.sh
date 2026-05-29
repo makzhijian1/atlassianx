@@ -4,6 +4,7 @@ set -euo pipefail
 JIRA_ENV_DIR=".envs/jira"
 JIRA_ACTIVE_FILE=".jira-env"
 ENV_FILE="${ENV_FILE:-}"
+REQUIRE_CLOUD_ID="${REQUIRE_CLOUD_ID:-1}"
 
 if [ -z "$ENV_FILE" ] && [ -f "$JIRA_ACTIVE_FILE" ]; then
   active_env="$(cat "$JIRA_ACTIVE_FILE")"
@@ -21,7 +22,12 @@ get_env_value() {
     return 0
   fi
 
-  grep -E "^${key}=" "$ENV_FILE" | tail -n 1 | cut -d= -f2-
+  awk -v key="$key" '
+    $0 ~ "^" key "=" {
+      sub("^" key "=", "")
+      print
+    }
+  ' "$ENV_FILE" | tail -n 1
 }
 
 require_value() {
@@ -144,11 +150,18 @@ JIRA_SITE_URL="$(get_env_value "JIRA_SITE_URL")"
 JIRA_PROJECT_KEY="$(get_env_value "JIRA_PROJECT_KEY")"
 JIRA_EMAIL="$(get_env_value "JIRA_EMAIL")"
 JIRA_API_TOKEN="$(get_env_value "JIRA_API_TOKEN")"
+JIRA_CLOUD_ID="$(get_env_value "JIRA_CLOUD_ID")"
 
 require_value "JIRA_SITE_URL" "$JIRA_SITE_URL"
 require_value "JIRA_PROJECT_KEY" "$JIRA_PROJECT_KEY"
 require_value "JIRA_EMAIL" "$JIRA_EMAIL"
 require_value "JIRA_API_TOKEN" "$JIRA_API_TOKEN"
+
+if [ "$REQUIRE_CLOUD_ID" = "1" ] && [ -z "$JIRA_CLOUD_ID" ]; then
+  echo "Missing JIRA_CLOUD_ID in $ENV_FILE." >&2
+  echo "Re-run make init-jira-account for this env to refresh the profile with Cloud ID." >&2
+  exit 1
+fi
 
 if ! command -v curl >/dev/null 2>&1; then
   echo "curl is required to test Jira connectivity." >&2
@@ -175,4 +188,4 @@ if [ "$status" != "200" ]; then
   fail_project "$status" "$headers_file" "$body_file"
 fi
 
-echo "Jira account verified for ${JIRA_EMAIL} on ${JIRA_SITE_URL}, project ${JIRA_PROJECT_KEY}."
+echo "Jira account verified for ${JIRA_EMAIL} on ${JIRA_SITE_URL}, project ${JIRA_PROJECT_KEY}, cloud ${JIRA_CLOUD_ID}."

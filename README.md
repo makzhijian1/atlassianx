@@ -20,6 +20,8 @@ The setup prompts for:
 - Whether a Jira API token already exists
 - Jira API token, entered silently
 
+After validating Jira access, setup also retrieves the Jira Cloud ID and stores it in the same profile for GraphQL requests.
+
 The profile is saved to:
 
 ```text
@@ -70,6 +72,7 @@ JIRA_EMAIL=...
 JIRA_API_TOKEN=...
 JIRA_SITE_URL=...
 JIRA_PROJECT_KEY=...
+JIRA_CLOUD_ID=...
 ```
 
 Security notes:
@@ -86,3 +89,5 @@ Engineering work is tracked in `_increments/`.
 - `_increments/_templates/` contains the reusable increment document templates.
 - `_increments/ATL-001-initialise-jira-api-access/` captures the first increment for Jira API account initialization.
 - `_increments/ATL-002-jira-env-profiles/` captures Jira environment profile switching.
+- `_increments/ATL-003-jira-cloud-id-in-env-profiles/` captures Jira Cloud ID setup during env initialization.
+- `_increments/ATL-004-jira-http-request-templates/` captures the draft request template collection.

@@ -39,6 +39,7 @@ require_value() {
 jira_site_url="$(get_env_value "JIRA_SITE_URL")"
 jira_project_key="$(get_env_value "JIRA_PROJECT_KEY")"
 jira_email="$(get_env_value "JIRA_EMAIL")"
+jira_cloud_id="$(get_env_value "JIRA_CLOUD_ID")"
 
 require_value "JIRA_SITE_URL" "$jira_site_url"
 require_value "JIRA_PROJECT_KEY" "$jira_project_key"
@@ -51,6 +52,11 @@ fi
 echo "JIRA_SITE_URL=$jira_site_url"
 echo "JIRA_PROJECT_KEY=$jira_project_key"
 echo "JIRA_EMAIL=$jira_email"
+if [ -n "$jira_cloud_id" ]; then
+  echo "JIRA_CLOUD_ID=$jira_cloud_id"
+else
+  echo "JIRA_CLOUD_ID=<missing: rerun make init-jira-account for this env>"
+fi
 
 if [ -n "$footer" ]; then
   echo "$footer"

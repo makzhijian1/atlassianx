@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE=".env"
+JIRA_ENV_DIR=".envs/jira"
+JIRA_ACTIVE_FILE=".jira-env"
 TOKEN_PAGE="https://id.atlassian.com/manage-profile/security/api-tokens"
-
-if [ ! -f "$ENV_FILE" ]; then
-  cp .env.example "$ENV_FILE"
-  echo "Created $ENV_FILE from .env.example."
-fi
 
 prompt_required() {
   local label="$1"
@@ -19,6 +15,22 @@ prompt_required() {
   done
 
   printf "%s" "$value"
+}
+
+validate_env_name() {
+  local name="$1"
+
+  case "$name" in
+    ""|*".."*|*/*|*\\*)
+      return 1
+      ;;
+  esac
+
+  case "$name" in
+    *[!A-Za-z0-9._-]*)
+      return 1
+      ;;
+  esac
 }
 
 set_env_value() {
@@ -73,6 +85,21 @@ read_token() {
   printf "%s" "$value"
 }
 
+env_name="$(prompt_required "Jira env name, e.g. maklabs")"
+if ! validate_env_name "$env_name"; then
+  echo "Invalid Jira env name: $env_name" >&2
+  echo "Use only letters, numbers, dots, underscores, and hyphens." >&2
+  exit 1
+fi
+
+mkdir -p "$JIRA_ENV_DIR"
+ENV_FILE="$JIRA_ENV_DIR/$env_name.env"
+
+if [ ! -f "$ENV_FILE" ]; then
+  : > "$ENV_FILE"
+  echo "Created $ENV_FILE."
+fi
+
 project_url="$(prompt_required "Jira project URL, e.g. https://maklabs.atlassian.net/jira/software/projects/MZJ2026")"
 site_url="$(derive_site_url "$project_url")"
 project_key="$(derive_project_key "$project_url")"
@@ -125,6 +152,9 @@ set_env_value "JIRA_PROJECT_KEY" "$project_key"
 set_env_value "JIRA_EMAIL" "$email"
 set_env_value "JIRA_API_TOKEN" "$token"
 
+printf "%s\n" "$env_name" > "$JIRA_ACTIVE_FILE"
+
 echo "Saved Jira API access settings to $ENV_FILE."
+echo "Selected Jira env: $env_name"
 echo "Testing Jira connectivity for $project_key on $site_url..."
-./scripts/test_jira_account.sh
+ENV_FILE="$ENV_FILE" ./scripts/test_jira_account.sh

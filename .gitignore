@@ -1,3 +1,5 @@
 .env
+.jira-env
+.envs/jira/*.env
+!.envs/jira/example.env
 .DS_Store
-

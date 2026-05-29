@@ -1,59 +1,83 @@
 # atlassianx
 
-Make-centric Atlassian and Jira automation workspace.
+## Introduction
 
-## Setup
+`atlassianx` is a Make-centric workspace for local Jira and Atlassian automation. It keeps Jira account/project settings in ignored local env profiles so you can switch between projects without committing credentials.
 
-Initialize local files:
+## First Time Setup
 
-```bash
-make init
-```
-
-This creates `.env` from `.env.example` when `.env` does not already exist. `.env` is git ignored and is where local Jira credentials are stored.
-
-Authenticate the current Jira project session:
+Initialize a Jira profile:
 
 ```bash
 make init-jira-account
 ```
 
-The Jira setup prompts for:
+The setup prompts for:
 
+- Jira env name, for example `maklabs`
 - Jira project URL, for example `https://maklabs.atlassian.net/jira/software/projects/MZJ2026`
 - Jira registered email
 - Whether a Jira API token already exists
-- The Jira API token, entered silently
+- Jira API token, entered silently
 
-If no API token exists yet, the setup opens the Atlassian API token page and prints concise creation steps before asking for the new token.
+The profile is saved to:
 
-Successful init means:
+```text
+.envs/jira/<name>.env
+```
 
-- `.env` contains the current Jira project session settings.
-- Jira API authentication succeeds for the registered email and API token.
-- The authenticated account can access the project key parsed from the project URL.
+The selected profile name is saved to ignored local file `.jira-env`. There should be no root `.env` required for normal use.
 
-You can re-run the connectivity check without changing credentials:
+Verify the active Jira profile:
+
+```bash
+make show-jira-env
+```
+
+Test Jira connectivity:
 
 ```bash
 make test-jira-account
 ```
 
-This first increment assumes the browser is already logged into the Jira project you want this repository session to target. Re-running `make init-jira-account` replaces the active project session in `.env`. Multi-project profiles and switching will be added as a later increment.
+## Toggling Envs
 
-## Environment
-
-Expected `.env` keys:
+List available Jira profiles:
 
 ```bash
-JIRA_PROJECT_URL=
-JIRA_SITE_URL=
-JIRA_PROJECT_KEY=
-JIRA_EMAIL=
-JIRA_API_TOKEN=
+make list-jira-envs
 ```
 
-Do not commit `.env`.
+Select an existing profile:
+
+```bash
+make set-jira-env ENV=maklabs
+```
+
+This updates `.jira-env` only. It does not copy or overwrite the saved profile file.
+
+Create a profile manually from the example:
+
+```bash
+cp .envs/jira/example.env .envs/jira/work.env
+```
+
+Edit values:
+
+```env
+JIRA_PROJECT_URL=...
+JIRA_EMAIL=...
+JIRA_API_TOKEN=...
+JIRA_SITE_URL=...
+JIRA_PROJECT_KEY=...
+```
+
+Security notes:
+
+- `.jira-env` is local-only and ignored by git.
+- `.envs/jira/*.env` is ignored by git.
+- Never commit API tokens.
+- `example.env` is safe to commit.
 
 ## Increments
 
@@ -61,3 +85,4 @@ Engineering work is tracked in `_increments/`.
 
 - `_increments/_templates/` contains the reusable increment document templates.
 - `_increments/ATL-001-initialise-jira-api-access/` captures the first increment for Jira API account initialization.
+- `_increments/ATL-002-jira-env-profiles/` captures Jira environment profile switching.

@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE=".env"
+JIRA_ENV_DIR=".envs/jira"
+JIRA_ACTIVE_FILE=".jira-env"
+ENV_FILE="${ENV_FILE:-}"
+
+if [ -z "$ENV_FILE" ] && [ -f "$JIRA_ACTIVE_FILE" ]; then
+  active_env="$(cat "$JIRA_ACTIVE_FILE")"
+  ENV_FILE="$JIRA_ENV_DIR/$active_env.env"
+fi
+
+if [ -z "$ENV_FILE" ]; then
+  ENV_FILE=".env"
+fi
 
 get_env_value() {
   local key="$1"
@@ -107,7 +118,7 @@ fail_auth() {
   echo "- Confirm the token was created under the same Atlassian account email saved in JIRA_EMAIL." >&2
   echo "- If you have multiple Atlassian accounts in the browser, switch to the account that owns this Jira project before creating the token." >&2
   echo "- Use an Atlassian account API token for Jira Cloud, not a token name, token ID, org admin API key, OAuth client secret, or app password." >&2
-  echo "- Re-run make init-jira-account to replace the active project session in .env." >&2
+  echo "- Re-run make init-jira-account to replace the saved Jira env profile." >&2
   exit 1
 }
 
